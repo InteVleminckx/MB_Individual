@@ -97,7 +97,7 @@ void CFG::replacement_rule_1(Transition *transition)
     string body;
 
     //1)
-    if (transition->getInput().empty()) body = "e";
+    if (transition->getInput().empty()) body = "";
 
     //2)
     else body = transition->getInput();
