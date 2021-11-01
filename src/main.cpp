@@ -4,7 +4,8 @@
 using namespace std;
 
 int main() {
-    PDA pda("../../input-pda2cfg1.json");
-    pda.toCFG().print();
+    CFG cfg("../../input-cyk1.json");
+    cfg.accepts("baaba"); //moet true geven
+    cfg.accepts("abba"); //moet false geven
     return 0;
 }

@@ -49,6 +49,35 @@ CFG::CFG(PDA &pda)
 
 }
 
+CFG::CFG(const string &jsonfile)
+{
+    //Inlezen JSON file
+    ifstream  input(jsonfile);
+
+    json file;
+    input >> file;
+
+    //eerst kennen we de variable toe de vector
+    for (auto &var : file["Variables"]) gVariables.push_back(var);
+    //Sorteren van de vector
+    sort(gVariables.begin(), gVariables.end());
+
+    //Toekenen van de terminals
+    for (auto &ter : file["Terminals"]) gTerminals.push_back(ter);
+    //Sorteren van de vector
+    sort(gTerminals.begin(), gTerminals.end());
+
+    //Toekenen van de productions
+    for(auto &pro : file["Productions"])
+    {
+        if (pro["body"].empty()) gProductions.emplace_back(pro["head"], vector<string>{"e"});
+        else gProductions.emplace_back(pro["head"], pro["body"]);
+    }
+
+    //Toekenen van het startsymbool
+    gStartsymbol = file["Start"];
+}
+
 void CFG::searchProdStartSymbol(const string& startState, const string& startStack, const vector<string>& states)
 {
     for  (const auto& state : states)
@@ -259,6 +288,81 @@ void CFG::print()
 
 }
 
+bool CFG::accepts(const string input)
+{
+    //aanmaken van de tabel
+    createTable(input.size());
 
+    //aanmaken vector van elke input char, symmetrie met de tabel dan
+    for (auto const chr : input) gInputstring.push_back(chr);
+
+    directDerivation();
+
+    fillingTable();
+
+    clearAll();
+    return false;
+}
+
+void CFG::createTable(const int stringLenght)
+{
+    for (int i = 0; i < stringLenght; ++i)
+    {
+        vector<set<string>> createRow;
+        for (int j = 0; j < stringLenght; ++j)
+        {
+            set<string> createSet;
+            createRow.push_back(createSet);
+        }
+        gCYK_table.push_back(createRow);
+    }
+}
+
+void CFG::clearAll() {
+    //tabel helemaal op het einde terug leegmaken
+    gCYK_table = vector<vector<set<string>>>();
+
+    //vector van input ook leegmaken
+    gInputstring = vector<char>();
+}
+
+void CFG::directDerivation()
+{
+    for (int i = 0; i < gInputstring.size(); i++) searchInputInProduction(gInputstring[i], gCYK_table[0][i]);
+    gRowpointer++;
+}
+
+void CFG::searchInputInProduction(const char terminal, set<string>& variables)
+{
+    for (auto const &pro : gProductions)
+    {
+        for (auto const &body : pro.second)
+        {
+            if (body[0] == terminal) variables.insert(pro.first);
+        }
+    }
+}
+
+void CFG::fillingTable()
+{
+    //Berekenen aantal subtables
+    int numberTables = gInputstring.size() - gRowpointer;
+
+    for (int i = 0; i < numberTables; ++i) 
+    {
+        
+    }
+
+}
+
+void CFG::createSubTable(const int colom) 
+{
+    vector<vector<set<string>>> subTable;
+
+    for (int i = 0; i < ; ++i) {
+        
+    }
+    
+}
 
 
