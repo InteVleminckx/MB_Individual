@@ -298,7 +298,9 @@ bool CFG::accepts(const string input)
 
     directDerivation();
 
-    fillingTable();
+    while (gRowpointer != (int) gInputstring.size()) fillingTable();
+    printTable();
+
 
     clearAll();
     return false;
@@ -324,11 +326,14 @@ void CFG::clearAll() {
 
     //vector van input ook leegmaken
     gInputstring = vector<char>();
+
+    //rowpointer resetten
+    gRowpointer = 0;
 }
 
 void CFG::directDerivation()
 {
-    for (int i = 0; i < gInputstring.size(); i++) searchInputInProduction(gInputstring[i], gCYK_table[0][i]);
+    for (int i = 0; i < (int) gInputstring.size(); i++) searchInputInProduction(gInputstring[i], gCYK_table[0][i]);
     gRowpointer++;
 }
 
@@ -350,27 +355,97 @@ void CFG::fillingTable()
 
     for (int i = 0; i < numberTables; ++i) 
     {
-        vector<vector<set<string>>> subTable = createSubTable(i);
+        createTop(createSubTable(i), i);
     }
+    gRowpointer++;
 
 }
 
-vector<vector<set<string>>> CFG::createSubTable(const int colom) 
+vector<vector<set<string>>> CFG::createSubTable(const int colom)
 {
     vector<vector<set<string>>> subTable;
 
     for (int i = 0; i < gRowpointer; ++i) 
     {
         vector<set<string>> row;
-        for (int j = colom; j < gRowpointer + colom - i; j++)
+        for (int j = colom; j <= gRowpointer + colom - i; j++)
         {
-           row.insert(gCYK_table[i][j]);
+           row.push_back(gCYK_table[i][j]);
         }
         subTable.push_back(row);
     }
 
     return subTable;
     
+}
+
+void CFG::createTop(vector<vector<set<string>>> subTable, int topColom)
+{
+
+    for (int i = 0; i < (int) subTable.size(); ++i)
+    {
+        for (auto const &first : subTable[i][0])
+        {
+            vector<string> creations;
+            for (auto const &second : subTable[subTable.size()-1 - i][subTable[subTable.size()-1-i].size()-1])
+            {
+                compareCreationWithProductions(vector<string>{first, second}, pair<int, int>{subTable.size(), topColom});
+            }
+        }
+    }
+}
+
+void CFG::compareCreationWithProductions(const vector<string> creation, pair<int, int> topPlace) {
+
+    for (int i = 0; i < (int) gProductions.size(); ++i)
+    {
+        if (creation == gProductions[i].second)
+        {
+            gCYK_table[topPlace.first][topPlace.second].insert(gProductions[i].first);
+        }
+    }
+}
+
+void CFG::printTable()
+{
+    bool accept = false;
+
+    vector<pair<int, int>> stringDistance;
+    for (int i = 0; i < gCYK_table.size(); ++i)
+    {
+        for (int j = 0; j < gCYK_table[i].size()- i; ++j)
+        {
+            if (i == 0) stringDistance.push_back(pair<int, int>{j, gCYK_table[i][j].size()});
+            else
+            {
+                if (stringDistance[j].second < gCYK_table[i][j].size())
+                {
+                    stringDistance[j].second = gCYK_table[i][j].size();
+                }
+            }
+        }
+    }
+    string table;
+    for (int i = gCYK_table.size()-1; 0 <= i; --i)
+    {
+        for (int j = 0; j < gCYK_table[i].size()- i; ++j)
+        {
+            table += "| {";
+            int counter{};
+            for (auto const &chr : gCYK_table[i][j])
+            {
+                table+=chr;
+                table += (counter+1 != gCYK_table[i][j].size()) ? "," : "} ";
+                counter++;
+                if (chr == gStartsymbol && i == gCYK_table.size()-1) accept = true;
+            }
+            if (gCYK_table[i][j].empty()) table+= "}";
+            for (int k = 0; k < stringDistance[j].second*2 - gCYK_table[i][j].size()*2; ++k) table += " ";
+        }
+        table += "| \n";
+    }
+    cout << table << boolalpha << accept << endl;
+
 }
 
 

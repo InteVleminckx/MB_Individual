@@ -101,7 +101,30 @@ class CFG {
      */
     vector<vector<set<string>>> createSubTable(const int colom);
 
+    /**
+     * berekent de top van de subTable, dit is ook de waarde die we in de algemene tabel gaan invullen;
+     * @param subTable: vector<vector<set<string>>>, de subtabel die wel gemaakt hebben
+     * @param topColom: int, plaats van de colom
+     */
+    void createTop(vector<vector<set<string>>> subTable, int topColom);
+
+    /**
+     * Kijkt na op de gemaakte production in de productions zit, zo ja wordt de head toegevoegd
+     * @param creation: vector<string>, de gemaakte production
+     * @param topPlace: int, de plaats waar deze moet worden toegevoegd
+     */
+    void compareCreationWithProductions(vector<string> const creation, pair<int, int> topPlace);
+
+    /**
+     * Reset all global variables die hergebruikt moeten worden bij het
+     * controlleren van een nieuwe input
+     */
     void clearAll();
+
+    /**
+     * Print de tabel af
+     */
+    void printTable();
 
 public:
 
