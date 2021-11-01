@@ -350,20 +350,27 @@ void CFG::fillingTable()
 
     for (int i = 0; i < numberTables; ++i) 
     {
-        createSubTable(i);
+        vector<vector<set<string>>> subTable = createSubTable(i);
     }
 
 }
 
-void CFG::createSubTable(const int colom) 
+vector<vector<set<string>>> CFG::createSubTable(const int colom) 
 {
     vector<vector<set<string>>> subTable;
 
-    for (int i = 0; i < ; ++i) 
+    for (int i = 0; i < gRowpointer; ++i) 
     {
-        
-
+        vector<set<string>> row;
+        for (int j = colom; j < gRowpointer + colom; j++)
+        {
+           row.insert(gCYK_table[i][j]);
+         
+        }
+        subTable.push_back(row);
     }
+
+    return subTable;
     
 }
 
