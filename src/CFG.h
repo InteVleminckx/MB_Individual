@@ -97,8 +97,9 @@ class CFG {
     /**
      * Genereert een subtable waarbij de top, de plaats is die we gaan invullen
      * @param colom: int, colom plaats van de top
+     * @return vector<vector<set<string>>>: de subtabel die gemaakt is.
      */
-    void createSubTable(const int colom);
+    vector<vector<set<string>>> createSubTable(const int colom);
 
     void clearAll();
 
