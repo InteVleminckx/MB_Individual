@@ -362,10 +362,9 @@ vector<vector<set<string>>> CFG::createSubTable(const int colom)
     for (int i = 0; i < gRowpointer; ++i) 
     {
         vector<set<string>> row;
-        for (int j = colom; j < gRowpointer + colom; j++)
+        for (int j = colom; j < gRowpointer + colom - i; j++)
         {
            row.insert(gCYK_table[i][j]);
-         
         }
         subTable.push_back(row);
     }
