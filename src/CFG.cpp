@@ -350,7 +350,7 @@ void CFG::fillingTable()
 
     for (int i = 0; i < numberTables; ++i) 
     {
-        
+        createSubTable(i);
     }
 
 }
@@ -359,8 +359,10 @@ void CFG::createSubTable(const int colom)
 {
     vector<vector<set<string>>> subTable;
 
-    for (int i = 0; i < ; ++i) {
+    for (int i = 0; i < ; ++i) 
+    {
         
+
     }
     
 }
