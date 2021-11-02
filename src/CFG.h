@@ -116,6 +116,21 @@ class CFG {
     void compareCreationWithProductions(vector<string> const creation, pair<int, int> topPlace);
 
     /**
+     * Verwijderd alle productions naar epsilon
+     */
+    void RemoveNullProductions();
+
+    /**
+     * Wijzigt de productions waar de nullable in stond
+     */
+    void addProductions(string const nullable);
+
+    /**
+     *  Maakt elke mogelijke productie recursief aan
+     */
+    void recProduction();
+
+    /**
      * Reset all global variables die hergebruikt moeten worden bij het
      * controlleren van een nieuwe input
      */
@@ -139,7 +154,13 @@ public:
      */
     bool accepts(const string input);
 
-    void print();
+    /**
+     * Zet een CFG om naar een CNF
+     */
+    void toCNF();
+
+
+    void print(bool cnf = false);
 
 };
 

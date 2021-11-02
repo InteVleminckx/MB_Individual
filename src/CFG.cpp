@@ -70,10 +70,11 @@ CFG::CFG(const string &jsonfile)
     //Toekenen van de productions
     for(auto &pro : file["Productions"])
     {
-        if (pro["body"].empty()) gProductions.emplace_back(pro["head"], vector<string>{"e"});
+        if (pro["body"].empty()) gProductions.emplace_back(pro["head"], vector<string>{});
         else gProductions.emplace_back(pro["head"], pro["body"]);
     }
 
+    sort(gProductions.begin(), gProductions.end());
     //Toekenen van het startsymbool
     gStartsymbol = file["Start"];
 }
@@ -247,7 +248,7 @@ void CFG::shiftStates(vector<string> &states)
 
 }
 
-void CFG::print()
+void CFG::print(bool cnf)
 {
 
     //Printen van de Variables
@@ -270,16 +271,36 @@ void CFG::print()
 
     //Printen van de Productions
     cout << "P = {" << endl;
-    for (const auto& pro : gProductions )
+    if (cnf)
     {
-        string body;
-        for (auto &var : pro.second)
+        for (const auto& pro : gProductions )
         {
-            if (var != pro.second[pro.second.size()-1]) body += var + " ";
-            else body += var;
-        }
+            string body;
+            int i = 0;
 
-        cout << "\t" << pro.first << "  -> `" << body << "`" << endl;
+            for (auto &var : pro.second)
+            {
+                i++;
+                if (i != pro.second.size()) body += var + " ";
+                else body += var;
+            }
+
+            cout << "\t" << pro.first << "  -> `" << body << "`" << endl;
+        }
+    }
+    else
+    {
+        for (const auto& pro : gProductions )
+        {
+            string body;
+            for (auto &var : pro.second)
+            {
+                if (var != pro.second[pro.second.size()-1]) body += var + " ";
+                else body += var;
+            }
+
+            cout << "\t" << pro.first << "  -> `" << body << "`" << endl;
+        }
     }
     cout << "}" << endl;
 
@@ -406,6 +427,82 @@ void CFG::compareCreationWithProductions(const vector<string> creation, pair<int
     }
 }
 
+void CFG::toCNF()
+{
+    cout << "Original CFG:\n\n";
+    print(true);
+    cout << "\n-------------------------------------\n\n";
+    RemoveNullProductions();
+}
+
+void CFG::RemoveNullProductions()
+{
+
+    set<string> nullables{};
+    int original = gProductions.size();
+    int created;
+
+    cout << " >> Eliminating epsilon productions\n";
+
+    //Code
+    //-----------------------------------------------//
+
+    bool erased = false;
+    //zoeken naar nullables
+    while (!erased)
+    {
+        erased = true;
+        for (int i = 0; i < gProductions.size(); ++i)
+        {
+            if (gProductions[i].second.empty())
+            {
+                addProductions(gProductions[i].first);
+                nullables.insert(gProductions[i].first);
+                gProductions.erase(gProductions.begin()+i);
+                erased = false;
+                break;
+            }
+        }
+    }
+
+
+
+
+
+
+    //-----------------------------------------------//
+    //printing
+    cout << "  Nullables are {";
+    int i = 0;
+    for (auto const &nullable : nullables)
+    {
+        i++;
+        if (i != nullables.size()) cout << nullable + ", ";
+        else cout << nullable + "}\n";
+    }
+    created = gProductions.size();
+    cout << "  Created " << created << " productions, original had " << original << endl;
+    print(true);
+
+}
+
+void CFG::addProductions(const string nullable)
+{
+    for (auto const &pro : gProductions)
+    {
+        for (int i = 0; i < pro.second.size(); ++i)
+        {
+
+
+
+        }
+    }
+
+}
+
+
+}
+
 void CFG::printTable()
 {
     bool accept = false;
@@ -447,5 +544,9 @@ void CFG::printTable()
     cout << table << boolalpha << accept << endl;
 
 }
+
+
+
+
 
 
