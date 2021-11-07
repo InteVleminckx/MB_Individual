@@ -4,7 +4,7 @@
 using namespace std;
 
 int main() {
-    CFG cfg("../../input-cnf1.json");
-    cfg.toCNF();
+    PDA pda("../../input-pda2cfg1.json");
+    pda.toCFG().print();
     return 0;
 }

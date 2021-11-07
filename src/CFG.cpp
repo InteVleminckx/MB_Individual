@@ -501,8 +501,6 @@ void CFG::addProductions(const string nullable)
 }
 
 
-}
-
 void CFG::printTable()
 {
     bool accept = false;
