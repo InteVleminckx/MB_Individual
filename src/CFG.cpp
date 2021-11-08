@@ -781,7 +781,8 @@ void CFG::addFollow_rule_1_or_3(const production &pro, const string &var, const 
 void CFG::addFollow_rule_2(const production &pro, const string &var)
 {
     //bepalen de follow van de head en voegen deze toe
-    if (pro.first.size() == 1)
+    //als de head hetzelfde is als het achterste van de body gaat dit een inf loop geven
+    if (pro.first != var)
     {
         for (const auto & setVal : follow(pro.first)) gFollow[var].insert(setVal);
     }
