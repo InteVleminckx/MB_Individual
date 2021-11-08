@@ -429,74 +429,74 @@ void CFG::compareCreationWithProductions(const vector<string> creation, pair<int
 
 void CFG::toCNF()
 {
-    cout << "Original CFG:\n\n";
-    print(true);
-    cout << "\n-------------------------------------\n\n";
-    RemoveNullProductions();
+//    cout << "Original CFG:\n\n";
+//    print(true);
+//    cout << "\n-------------------------------------\n\n";
+//    RemoveNullProductions();
 }
 
 void CFG::RemoveNullProductions()
 {
 
-    set<string> nullables{};
-    int original = gProductions.size();
-    int created;
-
-    cout << " >> Eliminating epsilon productions\n";
-
-    //Code
-    //-----------------------------------------------//
-
-    bool erased = false;
-    //zoeken naar nullables
-    while (!erased)
-    {
-        erased = true;
-        for (int i = 0; i < gProductions.size(); ++i)
-        {
-            if (gProductions[i].second.empty())
-            {
-                addProductions(gProductions[i].first);
-                nullables.insert(gProductions[i].first);
-                gProductions.erase(gProductions.begin()+i);
-                erased = false;
-                break;
-            }
-        }
-    }
-
-
-
-
-
-
-    //-----------------------------------------------//
-    //printing
-    cout << "  Nullables are {";
-    int i = 0;
-    for (auto const &nullable : nullables)
-    {
-        i++;
-        if (i != nullables.size()) cout << nullable + ", ";
-        else cout << nullable + "}\n";
-    }
-    created = gProductions.size();
-    cout << "  Created " << created << " productions, original had " << original << endl;
-    print(true);
+//    set<string> nullables{};
+//    int original = gProductions.size();
+//    int created;
+//
+//    cout << " >> Eliminating epsilon productions\n";
+//
+//    //Code
+//    //-----------------------------------------------//
+//
+//    bool erased = false;
+//    //zoeken naar nullables
+//    while (!erased)
+//    {
+//        erased = true;
+//        for (int i = 0; i < gProductions.size(); ++i)
+//        {
+//            if (gProductions[i].second.empty())
+//            {
+//                addProductions(gProductions[i].first);
+//                nullables.insert(gProductions[i].first);
+//                gProductions.erase(gProductions.begin()+i);
+//                erased = false;
+//                break;
+//            }
+//        }
+//    }
+//
+//
+//
+//
+//
+//
+//    //-----------------------------------------------//
+//    //printing
+//    cout << "  Nullables are {";
+//    int i = 0;
+//    for (auto const &nullable : nullables)
+//    {
+//        i++;
+//        if (i != nullables.size()) cout << nullable + ", ";
+//        else cout << nullable + "}\n";
+//    }
+//    created = gProductions.size();
+//    cout << "  Created " << created << " productions, original had " << original << endl;
+//    print(true);
 
 }
 
 void CFG::addProductions(const string nullable)
 {
-    for (auto const &pro : gProductions)
-    {
-        for (int i = 0; i < pro.second.size(); ++i)
-        {
-
-
-
-        }
-    }
+//    for (auto const &pro : gProductions)
+//    {
+//        for (int i = 0; i < pro.second.size(); ++i)
+//        {
+//
+//
+//
+//        }
+//    }
 
 }
 
@@ -541,6 +541,162 @@ void CFG::printTable()
     }
     cout << table << boolalpha << accept << endl;
 
+}
+
+void CFG::ll()
+{
+    set<string> newVar;
+    vector<production> newPro;
+    elemLeftRecursion(newVar, newPro);
+    if (!newVar.empty()) addNewProductions(newVar, newPro);
+    firstAndFollow();
+
+}
+
+void CFG::elemLeftRecursion(set<string> &newVar, vector<production> &newPro)
+{
+   //controlleer of het eerste symbool van de body == head
+
+    //vector van alfa's en beta's
+    vector<vector<string>> alfa, beta;
+    map<string, vector<vector<string>>> allPro;
+    string prev = gProductions[0].first;
+    vector<vector<string>> prod;
+    for (auto const &pro : gProductions)
+    {
+        if (pro.first == prev) prod.push_back(pro.second);
+
+        else
+        {
+            allPro.insert({prev, prod});
+            prev = pro.first;
+            prod = {};
+            prod.push_back(pro.second);
+        }
+    }
+    allPro.insert({prev, prod});
+
+    string newVari;
+
+    for (auto const &it : allPro)
+    {
+        for (auto const &at : it.second)
+        {
+            if (at.empty()) beta.push_back(at);
+
+            else if (it.first == at[0])
+            {
+                newVari = it.first + "\'";
+                vector<string> prods;
+                for (int i = 1; i < at.size(); ++i) prods.push_back(at[i]);
+                alfa.push_back(prods);
+                newVar.insert(newVari);
+            }
+            else beta.push_back(at);
+        }
+
+        for (int i = 0; i < beta.size(); ++i)
+        {
+            if (newVari == it.first + "\'")
+            {
+                vector<string> produ = beta[i];
+                produ.push_back(it.first + "\'");
+                newPro.push_back(production{it.first, produ});
+            }
+
+
+        }
+
+        for (int i = 0; i < alfa.size(); ++i)
+        {
+            if (newVari == it.first + "\'")
+            {
+                vector<string> produ = alfa[i];
+                produ.push_back(it.first + "\'");
+                newPro.push_back(production{it.first + "\'", produ});
+            }
+        }
+        if (newVari == it.first + "\'") newPro.push_back(production{it.first + "\'", vector<string>{""}});
+        cout << endl;
+    }
+
+
+}
+
+void CFG::addNewProductions(set<string> &newVar, vector<production> &newPro)
+{
+    for (auto const & var : newVar) gVariables.push_back(var);
+
+    vector<production> filterdPro;
+
+    for (auto const & var : newVar)
+    {
+        string oldVar = var;
+        oldVar.pop_back();
+
+        for (auto const & pro : gProductions)
+        {
+            if (pro.first != oldVar) filterdPro.push_back(pro);
+        }
+    }
+
+    gProductions = filterdPro;
+
+    for (auto const & pro : newPro) gProductions.push_back(pro);
+}
+
+void CFG::firstAndFollow()
+{
+
+    for (const auto &pro : gProductions)
+    {
+        if (!pro.second.empty())
+        {
+            if (gFirst.find(pro.first) == gFirst.end())
+            {
+                gFirst.insert({pro.first, set<string>{first(pro.second[0])}});
+            }
+            else
+            {
+                gFirst[pro.first].insert(first(pro.second[0]));
+            }
+        }
+    }
+
+    cout << endl;
+
+
+
+}
+
+string CFG::first(string var)
+{
+
+    bool isVar = false;
+    for (auto const &gVar : gVariables)
+    {
+        if (var == gVar) isVar = true;
+    }
+
+    if (isVar)
+    {
+        for (auto const &pro: gProductions)
+        {
+            if (pro.first == var)
+            {
+                if (gFirst.find(pro.first) == gFirst.end())
+                {
+                    gFirst.insert({pro.first, set<string>{first(pro.second[0])}});
+                }
+                else
+                {
+                    gFirst[pro.first].insert(first(pro.second[0]));
+                }
+            }
+        }
+    }
+
+    return var;
 }
 
 

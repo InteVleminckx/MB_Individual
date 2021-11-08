@@ -30,6 +30,9 @@ class CFG {
     vector<vector<set<string>>> gCYK_table;
     vector<char> gInputstring;
     int gRowpointer{};
+    map<string, set<string>> gFirst;
+    map<string, set<string>> gFollow;
+
 
     /**
      * Zoekt alles productions van het start symbool
@@ -141,6 +144,19 @@ class CFG {
      */
     void printTable();
 
+    /**
+     * Controlleert of er left recursion aanwezig is, als dat zo is wordt dit verwijderd.
+     * @param newVar: vector<string>, hier worden de nieuwe variable toegevoegd, moesten deze aangemaakt worden.
+     * @param newPro: vector<production>, hier worden nieuwe productions toegevoegd, moesten deze aangemaakt worden.
+     */
+    void elemLeftRecursion(set<string> &newVar, vector<production> &newPro);
+
+    void addNewProductions(set<string> &newVar, vector<production> &newPro);
+
+    void firstAndFollow();
+
+    string first(string var);
+
 public:
 
     CFG(PDA &pda);
@@ -159,6 +175,10 @@ public:
      */
     void toCNF();
 
+    /**
+     * LL(1) Parser
+     */
+    void ll();
 
     void print(bool cnf = false);
 
