@@ -151,11 +151,76 @@ class CFG {
      */
     void elemLeftRecursion(set<string> &newVar, vector<production> &newPro);
 
+    /**
+     * Voegt de nieuwe productions en aangemaakte variable toe aan huidige productions en variable.
+     * @param newVar: set<string>, de nieuwe variable
+     * @param newPro: vector<production>, de nieuwe productions
+     */
     void addNewProductions(set<string> &newVar, vector<production> &newPro);
 
+    /**
+     * bepaalt de first en follow sets (roept de functies hiervoor aan)
+     */
     void firstAndFollow();
 
-    string first(string var);
+    /**
+     * Bepaalt de first set voor een variable
+     * @param var: string, de variable waarvan we de set willen bepalen
+     * @return: set<string>, wordt gebruikt voor recursie
+     */
+    set<string> first(const string &var);
+
+    /**
+     * Zegt als de gegeven input een variable is
+     * @param input: string, de input die we willen controlleren
+     * @return: bool, true als het een variable is anders false
+     */
+    bool isVariable(const string &input);
+
+    /**
+     * Zegt als de gegeven input een terminal is
+     * @param input: string, de input die we willen controlleren
+     * @return: bool, true als het een terminal is anders false
+     */
+    bool isTerminal(const string &input);
+
+    /**
+     * Controlleert of de set een epsilon heeft
+     * @param setLeft: set<string>, de set die gecontrolleert moet worden
+     * @return: bool, true als het een epsilon bevat anders false
+     */
+    bool containsEpsilon(const set<string> &setLeft);
+
+    /**
+     * Bepaalt de follow set voor een variable
+     * @param var: string, de variable waarvan we de set willen bepalen
+     * @return: set<string>
+     */
+    set<string> follow(const string &var);
+
+    /**
+     * Eerste 'regel' om een follow te creeëren
+     * @param pro: production, de production waar de gezochte variable inzit
+     * @param var: string, de variable waar we de follow set van zoeken
+     * @param i: int, de plaats waar de var zich bevindt in de production
+     */
+    void addFollow_rule_1_or_3(const production &pro, const string &var, const int i);
+
+    /**
+    * Tweede 'regel' om een follow te creeëren
+    * @param pro: production, de production waar de gezochte variable inzit
+    * @param var: string, de variable waar we de follow set van zoeken
+    */
+    void addFollow_rule_2(const production &pro, const string &var);
+
+    /**
+    * Derde 'regel' om een follow te creeëren
+    * @param pro: production, de production waar de gezochte variable inzit
+    * @param var: string, de variable waar we de follow set van zoeken
+    * @param i: int, de plaats waar de var zich bevindt in de production
+    * @param next, set<string>, de first set van het volgende symbool
+    */
+    void addFollow_rule_3(const production &pro, const string &var, const int i, set<string> next);
 
 public:
 

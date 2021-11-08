@@ -70,7 +70,7 @@ CFG::CFG(const string &jsonfile)
     //Toekenen van de productions
     for(auto &pro : file["Productions"])
     {
-        if (pro["body"].empty()) gProductions.emplace_back(pro["head"], vector<string>{});
+        if (pro["body"].empty()) gProductions.emplace_back(pro["head"], vector<string>{""});
         else gProductions.emplace_back(pro["head"], pro["body"]);
     }
 
@@ -582,7 +582,7 @@ void CFG::elemLeftRecursion(set<string> &newVar, vector<production> &newPro)
     {
         for (auto const &at : it.second)
         {
-            if (at.empty()) beta.push_back(at);
+            if (at[0] == "") beta.push_back(at);
 
             else if (it.first == at[0])
             {
@@ -617,7 +617,6 @@ void CFG::elemLeftRecursion(set<string> &newVar, vector<production> &newPro)
             }
         }
         if (newVari == it.first + "\'") newPro.push_back(production{it.first + "\'", vector<string>{""}});
-        cout << endl;
     }
 
 
@@ -648,55 +647,188 @@ void CFG::addNewProductions(set<string> &newVar, vector<production> &newPro)
 void CFG::firstAndFollow()
 {
 
-    for (const auto &pro : gProductions)
-    {
-        if (!pro.second.empty())
-        {
-            if (gFirst.find(pro.first) == gFirst.end())
-            {
-                gFirst.insert({pro.first, set<string>{first(pro.second[0])}});
-            }
-            else
-            {
-                gFirst[pro.first].insert(first(pro.second[0]));
-            }
-        }
-    }
+    //TODO: nog uitleg zetten in de first function
+    for (const auto &var : gVariables) first(var);
 
-    cout << endl;
-
+    //TODO: nog uitleg zetten in de follow function
+    for (const auto &var : gVariables) follow(var);
 
 
 }
 
-string CFG::first(string var)
+set<string> CFG::first(const string &var)
 {
-
-    bool isVar = false;
-    for (auto const &gVar : gVariables)
+    // TODO: nesting nog te goei maken zodat het niet te diep genest is.
+    for (const auto &pro : gProductions)
     {
-        if (var == gVar) isVar = true;
+        if (pro.first == var && pro.second[0] != "")
+        {
+            // Het is een variable
+            if (isVariable(pro.second[0]))
+            {
+                bool containsEps = true;
+                int i = 0;
+                while (containsEps)
+                {
+                    set<string> setLeft = first(pro.second[i]);
+                    containsEps = containsEpsilon(setLeft);
+                    for (const auto & setVal : setLeft)
+                    {
+                        if (!containsEps) gFirst[var].insert(setVal);
+                        else if (i == pro.second.size()-1) gFirst[var].insert(setVal);
+                        else if (setVal != "") gFirst[var].insert(setVal);
+                    }
+
+                    if (containsEps) i++;
+                    if (i == pro.second.size()) containsEps = false;
+                }
+            }
+
+            // Het is een terminal
+            else if (isTerminal(pro.second[0])) gFirst[var].insert(pro.second[0]);
+        }
+
+        // epsilon
+        else if (pro.first == var && pro.second[0] == "")
+        {
+            gFirst[var].insert("");
+        }
     }
 
-    if (isVar)
+    return gFirst[var];
+}
+
+bool CFG::isVariable(const string &input)
+{
+
+    for (auto const & var : gVariables)
+        if (var == input) return true;
+
+
+    return false;
+}
+
+bool CFG::isTerminal(const string &input)
+{
+    for (auto const & ter : gTerminals)
+        if (ter == input) return true;
+
+    return false;
+}
+
+bool CFG::containsEpsilon(const set<string> &setLeft)
+{
+    for (const auto & elem : setLeft)
+        if (elem == "") return true;
+
+    return false;
+}
+
+set<string> CFG::follow(const string &var)
+{
+
+    /**
+     * Toegevoegde "regels" gebasseerd om het huidige algoritme om een duidelijk overzicht te creeëren:
+     * regel_1: geval var niet laatste in de production + first van follow bevat geen epsilon
+     *          -> voeg first van de volgende toe aan follow
+     * regel_2: geval var bevindt zich op de laatste plaats in de production
+     *          -> voeg de follow toe van de head van de production
+     * regel_3: geval var bevindt zich niet op de laatste plaats in de production + first van follow bevat epsilon
+     */
+
+    if (var == gStartsymbol) gFollow[var].insert("$");
+
+    //zoeken de var in productions
+    for (const auto & pro : gProductions)
     {
-        for (auto const &pro: gProductions)
+        for (int i = 0; i < pro.second.size(); ++i)
         {
-            if (pro.first == var)
+            // regel_1 of regel_3
+            if (pro.second[i] == var && i != pro.second.size()-1) addFollow_rule_1_or_3(pro, var, i);
+
+            // regel_2
+            else if (pro.second[i] == var && i == pro.second.size()-1)
             {
-                if (gFirst.find(pro.first) == gFirst.end())
-                {
-                    gFirst.insert({pro.first, set<string>{first(pro.second[0])}});
-                }
-                else
-                {
-                    gFirst[pro.first].insert(first(pro.second[0]));
-                }
+                addFollow_rule_2(pro, var);
             }
         }
     }
 
-    return var;
+    return gFollow[var];
+
+}
+
+void CFG::addFollow_rule_1_or_3(const production &pro, const string &var, const int i)
+{
+    //Variable
+    if (isVariable(pro.second[i+1]))
+    {
+        set<string> next = gFirst[pro.second[i+1]];
+        //regel_1
+        if (!containsEpsilon(next))
+        {
+            for (const auto & setVal : next) gFollow[var].insert(setVal);
+        }
+
+        //regel_3
+        else addFollow_rule_3(pro, var, i, next);
+
+    }
+    //Terminal (regel_1)
+    else gFollow[var].insert(pro.second[i+1]);
+}
+
+void CFG::addFollow_rule_2(const production &pro, const string &var)
+{
+    //bepalen de follow van de head en voegen deze toe
+    if (pro.first.size() == 1)
+    {
+        for (const auto & setVal : follow(pro.first)) gFollow[var].insert(setVal);
+    }
+}
+
+void CFG::addFollow_rule_3(const production &pro, const string &var, const int i, set<string> next)
+{
+    //TODO: nestings diepte inorde krijgen.
+    for (int j = i+1; j < pro.second.size() ; ++j)
+    {
+        for (const auto & setVal : next)
+        {
+            if (setVal != "") gFollow[var].insert(setVal);
+        }
+
+
+        // bevat geen epsilon meer dus kunnen hoeven niet meer voort te gaan
+        if (!containsEpsilon(next)) break;
+
+        //zitten nog niet op de laatste plaats in de body
+        if (j+1 != pro.second.size())
+        {
+            if (isVariable(pro.second[j+1])) next = gFirst[pro.second[j+1]];
+            else
+            {
+                gFollow[var].insert(pro.second[j+1]);
+                break;
+            }
+        }
+
+        //zitten op de laatste plaats in de body
+        else
+        {
+            if (isVariable(pro.second[j]))
+            {
+                set<string> setL = gFirst[pro.second[j]];
+                for (const auto & setVal : setL)
+                {
+                    if (setVal != "") gFollow[var].insert(setVal);
+                }
+
+                if (containsEpsilon(setL)) addFollow_rule_2(pro, var);
+
+            }
+            else gFollow[var].insert(pro.second[j]);
+        }
+    }
 }
 
 
