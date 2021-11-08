@@ -44,7 +44,7 @@ CFG::CFG(PDA &pda)
     //2) Uit elke transitie de productions afleiden
     createProductions(pda.getTransitions(), pda.getStates());
 
-    //Sorteren van de productions
+    //Sorteren van de productions.
     sort(gProductions.begin(), gProductions.end());
 
 }
