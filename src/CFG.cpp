@@ -551,9 +551,14 @@ void CFG::ll()
     if (!newVar.empty()) addNewProductions(newVar, newPro);
     firstAndFollow();
     vector<vector<string>> parserTable;
-    createParserTable(parserTable);
-
-
+    vector<int> longestString;
+    for (int i = 0; i < gTerminals.size() + 2; ++i)
+    {
+        if (i == gTerminals.size() + 1) longestString.push_back(5); //<EOS>
+        else longestString.push_back(1); //min lengt variable + terminal
+    }
+    createParserTable(parserTable, longestString);
+    printParserTable(parserTable, longestString);
 }
 
 void CFG::elemLeftRecursion(set<string> &newVar, vector<production> &newPro)
@@ -606,8 +611,6 @@ void CFG::elemLeftRecursion(set<string> &newVar, vector<production> &newPro)
                 produ.push_back(it.first + "\'");
                 newPro.push_back(production{it.first, produ});
             }
-
-
         }
 
         for (int i = 0; i < alfa.size(); ++i)
@@ -621,8 +624,6 @@ void CFG::elemLeftRecursion(set<string> &newVar, vector<production> &newPro)
         }
         if (newVari == it.first + "\'") newPro.push_back(production{it.first + "\'", vector<string>{""}});
     }
-
-
 }
 
 void CFG::addNewProductions(set<string> &newVar, vector<production> &newPro)
@@ -656,6 +657,46 @@ void CFG::firstAndFollow()
     //TODO: nog uitleg zetten in de follow function
     for (const auto &var : gVariables) follow(var);
 
+    string firstS;
+
+    for (const auto & setVal : gFirst)
+    {
+        bool hasEps = false;
+        firstS += "\t" + setVal.first + ": {";
+
+        for (auto it = setVal.second.begin(); it != setVal.second.end(); ++it)
+        {
+            auto next = it;
+            ++next;
+
+            if (*it == "") hasEps = true;
+
+            if (next != setVal.second.end() && *it != "") firstS += *it + ", ";
+            else if (next == setVal.second.end() && hasEps) firstS += *it + ", " + " " + "}\n";
+            else if (next == setVal.second.end() && !hasEps) firstS += *it + "}\n";
+        }
+        hasEps = false;
+    }
+
+    string followS;
+
+    for (const auto & setVal : gFollow)
+    {
+        followS += "\t" + setVal.first + ": {";
+
+        for (auto it = setVal.second.begin(); it != setVal.second.end(); ++it)
+        {
+            auto next = it;
+            ++next;
+
+            if (next != setVal.second.end() && *it != "" && *it == "$") followS += "<EOS>, ";
+            else if (next != setVal.second.end() && *it != "" && *it != "$") followS += *it + ", ";
+            else followS += *it + "}\n";
+        }
+    }
+
+
+    cout << " >> FIRST:\n" << firstS << " >> FOLLOW:\n" << followS;
 
 }
 
@@ -835,7 +876,7 @@ void CFG::addFollow_rule_3(const production &pro, const string &var, const int i
     }
 }
 
-void CFG::createParserTable(vector<vector<string>> &parserTable)
+void CFG::createParserTable(vector<vector<string>> &parserTable, vector<int> &longestString)
 {
 
     //opstellen van parse table
@@ -863,45 +904,64 @@ void CFG::createParserTable(vector<vector<string>> &parserTable)
         //variable
         if (isVariable(first))
         {
+
+            string str = "\'";
+            for (const auto & bodyVal : pro.second)
+            {
+                if (bodyVal != pro.second[pro.second.size()-1]) str += bodyVal + " ";
+                else str += bodyVal;
+            }
+            str += "\'";
+
+
+
             // neemt terminals uit follow van de variable (body)
-
-
+            for (auto setVal : gFollow[first])
+            {
+                pair<int, int> rowAcolom = searchRowandColom(pro.first, setVal, parserTable);
+                if (str.size() > longestString[rowAcolom.second]) longestString[rowAcolom.second] = str.size();
+                parserTable[rowAcolom.first][rowAcolom.second] = str;
+            }
         }
 
         //terminal
         else if (isTerminal(first))
         {
             // neemt production met terminal
-            string str;
+            string str = "\'";
             pair<int, int> rowAcolom = searchRowandColom(pro.first, first, parserTable);
             for (const auto & bodyVal : pro.second)
             {
-                if (bodyVal != pro.second.end()) str += bodyVal + " ";
+                if (bodyVal != pro.second[pro.second.size()-1]) str += bodyVal + " ";
                 else str += bodyVal;
             }
-            parserTable[rowAcolom.first][rowAcolom.second] = str; 
+            str += "\'";
 
+            if (str.size() > longestString[rowAcolom.second]) longestString[rowAcolom.second] = str.size();
 
+            parserTable[rowAcolom.first][rowAcolom.second] = str;
         }
 
         //epsilon
         else
         {
             // neemt follow van de head
-
+            for (auto setVal : gFollow[pro.first])
+            {
+                if (setVal == "$") setVal = "<EOS>";
+                pair<int, int> rowAcolom = searchRowandColom(pro.first, setVal, parserTable);
+                if (setVal.size() > longestString[rowAcolom.second]) longestString[rowAcolom.second] = setVal.size();
+                parserTable[rowAcolom.first][rowAcolom.second] = " ";
+            }
         }
-
-
     }
-
-
 
 }
 
 pair<int, int> CFG::searchRowandColom(const string &variable, const string &terminal, const vector<vector<string>> & parseTable) {
     pair<int, int> rowAcolom;
 
-    for (int i = 0; i < parseTable.size(): ++i)
+    for (int i = 0; i < parseTable.size(); ++i)
     {
         if (parseTable[i][0] == variable)
         {
@@ -920,6 +980,54 @@ pair<int, int> CFG::searchRowandColom(const string &variable, const string &term
     }
 
     return rowAcolom;
+
+}
+
+void CFG::printParserTable(const vector<vector<string>> &parserTable, vector<int> &longestString)
+{
+
+    cout << ">>> Table is built.\n\n" << "-------------------------------------\n" << endl;
+
+    string table;
+    string streepjes;
+    for (int i = 0; i < parserTable.size(); ++i)
+    {
+        if (i == 0)
+        {
+            table += "     ";
+            streepjes += "|-";
+            for (int j = 0; j < longestString[0]; ++j) streepjes += "-";
+            streepjes += "--";
+        }
+        else table += "| " + parserTable[i][0] + "  ";
+
+        for (int j = 1; j < parserTable[i].size(); ++j)
+        {
+            string text = parserTable[i][j];
+            int extraSpace = longestString[j] - text.size();
+            table += "| " +text + "  ";
+
+            if (i == 0)
+            {
+                streepjes += "|---";
+                for (int k = 0; k < longestString[j]; ++k) streepjes += "-";
+            }
+            for (int b = 0; b < extraSpace; ++b)
+            {
+                table += " ";
+//                if (i == 0 && j == 1) streepjes += "-";
+            }
+        }
+        table += "|\n";
+
+        if (i == 0)
+        {
+            streepjes += "|";
+            table += streepjes + "\n";
+        }
+    }
+    table += streepjes;
+    cout << table;
 
 }
 
