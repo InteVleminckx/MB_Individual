@@ -890,7 +890,28 @@ void CFG::createParserTable(vector<vector<string>> &parserTable)
 
 }
 
-pair<int, int> CFG::searchRowandColom(const string &variable, const string &terminal) {
-    return pair<int, int>();
+pair<int, int> CFG::searchRowandColom(const string &variable, const string &terminal, const vector<vector<string>> & parseTable) {
+    pair<int, int> rowAcolom;
+
+    for (int i = 0; i < parseTable.size(): ++i)
+    {
+        if (parseTable[i][0] == variable)
+        {
+            rowAcolom.first = i;
+            break;
+        }
+     }
+
+    for (int i = 0; i < parseTable[0].size(); ++i)
+    {
+        if (parseTable[0][i] == terminal)
+        {
+            rowAcolom.second = i;
+            break;
+        }
+    }
+
+    return rowAcolom;
+
 }
 
