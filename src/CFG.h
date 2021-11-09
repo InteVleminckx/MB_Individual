@@ -224,7 +224,7 @@ class CFG {
 
     void createParserTable(vector<vector<string>> &parserTable);
 
-    pair<int, int> searchRowandColom(const string &variable, const string &terminal);
+    pair<int, int> searchRowandColom(const string &variable, const string &terminal, const vector<vector<string>> & parseTable);
 
 
 public:
