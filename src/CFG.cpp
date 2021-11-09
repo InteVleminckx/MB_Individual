@@ -871,7 +871,15 @@ void CFG::createParserTable(vector<vector<string>> &parserTable)
         //terminal
         else if (isTerminal(first))
         {
-            // neemt huidige terminal
+            // neemt production met terminal
+            string str;
+            pair<int, int> rowAcolom = searchRowandColom(pro.first, first, parserTable);
+            for (const auto & bodyVal : pro.second)
+            {
+                if (bodyVal != pro.second.end()) str += bodyVal + " ";
+                else str += bodyVal;
+            }
+            parserTable[rowAcolom.first][rowAcolom.second] = str; 
 
 
         }
