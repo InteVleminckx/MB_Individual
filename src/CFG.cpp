@@ -905,13 +905,13 @@ void CFG::createParserTable(vector<vector<string>> &parserTable, vector<int> &lo
         if (isVariable(first))
         {
 
-            string str = "\'";
+            string str = "`";
             for (const auto & bodyVal : pro.second)
             {
                 if (bodyVal != pro.second[pro.second.size()-1]) str += bodyVal + " ";
                 else str += bodyVal;
             }
-            str += "\'";
+            str += "`";
 
 
 
@@ -928,14 +928,14 @@ void CFG::createParserTable(vector<vector<string>> &parserTable, vector<int> &lo
         else if (isTerminal(first))
         {
             // neemt production met terminal
-            string str = "\'";
+            string str = "`";
             pair<int, int> rowAcolom = searchRowandColom(pro.first, first, parserTable);
             for (const auto & bodyVal : pro.second)
             {
                 if (bodyVal != pro.second[pro.second.size()-1]) str += bodyVal + " ";
                 else str += bodyVal;
             }
-            str += "\'";
+            str += "`";
 
             if (str.size() > longestString[rowAcolom.second]) longestString[rowAcolom.second] = str.size();
 
