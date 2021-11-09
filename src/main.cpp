@@ -5,7 +5,7 @@ using namespace std;
 
 //cfg
 int main() {
-    CFG cfg("../../input-ll1.json");
+    CFG cfg("../../input-ll3.json");
     cfg.ll();
     return 0;
 }

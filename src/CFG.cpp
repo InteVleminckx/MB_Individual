@@ -1004,6 +1004,9 @@ void CFG::printParserTable(const vector<vector<string>> &parserTable, vector<int
         for (int j = 1; j < parserTable[i].size(); ++j)
         {
             string text = parserTable[i][j];
+
+            if (text == "") text = "<ERR>";
+
             int extraSpace = longestString[j] - text.size();
             table += "| " +text + "  ";
 
@@ -1015,7 +1018,6 @@ void CFG::printParserTable(const vector<vector<string>> &parserTable, vector<int
             for (int b = 0; b < extraSpace; ++b)
             {
                 table += " ";
-//                if (i == 0 && j == 1) streepjes += "-";
             }
         }
         table += "|\n";
