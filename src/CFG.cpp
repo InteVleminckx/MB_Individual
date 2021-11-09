@@ -672,7 +672,7 @@ void CFG::firstAndFollow()
             if (*it == "") hasEps = true;
 
             if (next != setVal.second.end() && *it != "") firstS += *it + ", ";
-            else if (next == setVal.second.end() && hasEps) firstS += *it + ", " + " " + "}\n";
+            else if (next == setVal.second.end() && hasEps) firstS += *it + ", " + "}\n";
             else if (next == setVal.second.end() && !hasEps) firstS += *it + "}\n";
         }
         hasEps = false;
