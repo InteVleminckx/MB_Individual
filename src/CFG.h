@@ -222,6 +222,11 @@ class CFG {
     */
     void addFollow_rule_3(const production &pro, const string &var, const int i, set<string> next);
 
+    void createParserTable(vector<vector<string>> &parserTable);
+
+    pair<int, int> searchRowandColom(const string &variable, const string &terminal);
+
+
 public:
 
     CFG(PDA &pda);

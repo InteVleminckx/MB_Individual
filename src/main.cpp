@@ -3,10 +3,16 @@
 
 using namespace std;
 
-
+//cfg
 int main() {
-    CFG cfg("../../input-ll4.json");
+    CFG cfg("../../input-ll1.json");
     cfg.ll();
     return 0;
 }
+
+//pda
+//int main() {
+//    PDA pda("../../input-pda2cfg2.json");
+//    pda.toCFG().print();
+//}
 

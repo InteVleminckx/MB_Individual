@@ -500,7 +500,6 @@ void CFG::addProductions(const string nullable)
 
 }
 
-
 void CFG::printTable()
 {
     bool accept = false;
@@ -545,11 +544,15 @@ void CFG::printTable()
 
 void CFG::ll()
 {
+    cout << ">>> Building LL(1) Table" << endl;
     set<string> newVar;
     vector<production> newPro;
     elemLeftRecursion(newVar, newPro);
     if (!newVar.empty()) addNewProductions(newVar, newPro);
     firstAndFollow();
+    vector<vector<string>> parserTable;
+    createParserTable(parserTable);
+
 
 }
 
@@ -832,8 +835,62 @@ void CFG::addFollow_rule_3(const production &pro, const string &var, const int i
     }
 }
 
+void CFG::createParserTable(vector<vector<string>> &parserTable)
+{
+
+    //opstellen van parse table
+    for (int i = 0; i < gVariables.size()+1; ++i)
+    {
+        vector<string> row;
+
+        for (int j = 0; j < gTerminals.size()+2; ++j)
+        {
+
+            if (i == 0 && j == 0) row.push_back("clear");
+            else if (i == 0 && j < gTerminals.size() + 1) row.push_back(gTerminals[j-1]);
+            else if (i == 0 && j == gTerminals.size() + 1) row.push_back("<EOS>");
+            else if (i > 0 && j == 0) row.push_back(gVariables[i-1]);
+            else if (i > 0 && j > 0) row.push_back("");
+        }
+        parserTable.push_back(row);
+    }
+
+
+    for (const auto &pro : gProductions)
+    {
+        string first = pro.second[0];
+
+        //variable
+        if (isVariable(first))
+        {
+            // neemt terminals uit follow van de variable (body)
+
+
+        }
+
+        //terminal
+        else if (isTerminal(first))
+        {
+            // neemt huidige terminal
+
+
+        }
+
+        //epsilon
+        else
+        {
+            // neemt follow van de head
+
+        }
+
+
+    }
 
 
 
+}
 
+pair<int, int> CFG::searchRowandColom(const string &variable, const string &terminal) {
+    return pair<int, int>();
+}
 
