@@ -170,23 +170,21 @@ void CFG::replacement_rule_3(Transition *transition, vector<string> &states)
     //Omdat er meerde replacements zijn hebben we p^n productions
     //Met p = aantal states en n = aantal replacements
 
+    vector<vector<string>> possComb = possibleCombinations(states, transition->getReplacement().size());
 
-    for (const auto& state1 : states)
-    {
+    for (const auto& state1 : states) {
         string head = "[" + transition->getFrom() +
                       "," + transition->getStackTop() +
                       "," + state1 +
                       "]";
 
 
-        string prev;
 
-        vector<string> copyStates = states;
-
-        for (int s = 0; s < (int) states.size(); ++s) {
+        for (int i = 0; i < possComb.size(); ++i) {
+            string prev;
             string body = transition->getInput();
-            for (int i = 0; i < (int) transition->getReplacement().size(); ++i)
-            {
+
+            for (int j = 0; j < possComb[i].size()+1; ++j) {
                 //3 delen:
                 //1) het begin waar binnen de [haakjes als eerste de To moet komen]
                 //2) het gelus tussen de replacements tot de voor laatste waarbij
@@ -195,36 +193,33 @@ void CFG::replacement_rule_3(Transition *transition, vector<string> &states)
                 //   van de head
 
                 //1)
-                if (i == 0)
-                {
+                if (j == 0) {
                     body += "[" + transition->getTo() +
-                            "," + transition->getReplacement()[i] +
-                            "," + copyStates[s] +
+                            "," + transition->getReplacement()[j] +
+                            "," + possComb[i][j] +
                             "]";
 
-                    prev = copyStates[s];
+                    prev = possComb[i][j];
                 }
 
-                //2)
-                else if (i < (int) transition->getReplacement().size()-1)
-                {
+                // 2)
+                else if (j < possComb[i].size()) {
                     body += "[" + prev +
-                            "," + transition->getReplacement()[i] +
-                            "," + copyStates[s] +
+                            "," + transition->getReplacement()[j] +
+                            "," + possComb[i][j] +
                             "]";
 
-                    prev = copyStates[s];
+                    prev = possComb[i][j];
                 }
 
-                    //3)
-                else
-                {
+                    // 3)
+                else {
                     body += "[" + prev +
-                            "," + transition->getReplacement()[i] +
+                            "," + transition->getReplacement()[j] +
                             "," + state1 +
                             "]";
                 }
-                shiftStates(copyStates);
+
             }
             production prod;
             prod.first = head; prod.second.push_back(body);
@@ -233,19 +228,44 @@ void CFG::replacement_rule_3(Transition *transition, vector<string> &states)
     }
 }
 
-void CFG::shiftStates(vector<string> &states)
+vector<vector<string>> CFG::possibleCombinations(vector<string> &states, int numberRepl) {
+
+    vector<vector<string>> posCombs;
+    vector<vector<string>> tempCombs;
+
+    // Voegen voor de eerste keer gewoon elke state toe in een aparte vector
+    for (int i = 0; i < states.size(); ++i)
+        tempCombs.push_back(vector<string>{states[i]});
+
+    // Maken alle mogelijke combinaties
+    for (int i = 0; i < numberRepl-2; ++i) createCurrCombinations(tempCombs, states);
+
+    // Maken voor de zekerheid toch een controllen en voegen het toe aan een andere vector
+    // en sorten deze nadien
+    for (const auto & temp : tempCombs)
+        if (temp.size() == numberRepl -1) posCombs.push_back(temp);
+
+    sort(posCombs.begin(), posCombs.end());
+
+    return posCombs;
+}
+
+void CFG::createCurrCombinations(vector<vector<string>> &tempCombs, const vector<string> &states)
 {
+    vector<vector<string>> curStates;
 
-    vector<string> newVector;
-
-    for (int i = 1; i < (int) states.size() + 1; ++i)
+    for (int i = 0; i < states.size(); ++i)
     {
-        if (i != (int) states.size()) newVector.push_back(states[i]);
-        else newVector.push_back(states[0]);
+        for (int j = 0; j < tempCombs.size(); ++j)
+        {
+            vector<string> comb;
+            comb.push_back(states[i]);
+            for (int k = 0; k < tempCombs[j].size(); ++k)
+                comb.push_back(tempCombs[j][k]);
+            curStates.push_back(comb);
+        }
     }
-
-    states = newVector;
-
+    tempCombs = curStates;
 }
 
 void CFG::print(bool cnf)
@@ -427,79 +447,6 @@ void CFG::compareCreationWithProductions(const vector<string> creation, pair<int
     }
 }
 
-void CFG::toCNF()
-{
-//    cout << "Original CFG:\n\n";
-//    print(true);
-//    cout << "\n-------------------------------------\n\n";
-//    RemoveNullProductions();
-}
-
-void CFG::RemoveNullProductions()
-{
-
-//    set<string> nullables{};
-//    int original = gProductions.size();
-//    int created;
-//
-//    cout << " >> Eliminating epsilon productions\n";
-//
-//    //Code
-//    //-----------------------------------------------//
-//
-//    bool erased = false;
-//    //zoeken naar nullables
-//    while (!erased)
-//    {
-//        erased = true;
-//        for (int i = 0; i < gProductions.size(); ++i)
-//        {
-//            if (gProductions[i].second.empty())
-//            {
-//                addProductions(gProductions[i].first);
-//                nullables.insert(gProductions[i].first);
-//                gProductions.erase(gProductions.begin()+i);
-//                erased = false;
-//                break;
-//            }
-//        }
-//    }
-//
-//
-//
-//
-//
-//
-//    //-----------------------------------------------//
-//    //printing
-//    cout << "  Nullables are {";
-//    int i = 0;
-//    for (auto const &nullable : nullables)
-//    {
-//        i++;
-//        if (i != nullables.size()) cout << nullable + ", ";
-//        else cout << nullable + "}\n";
-//    }
-//    created = gProductions.size();
-//    cout << "  Created " << created << " productions, original had " << original << endl;
-//    print(true);
-
-}
-
-void CFG::addProductions(const string nullable)
-{
-//    for (auto const &pro : gProductions)
-//    {
-//        for (int i = 0; i < pro.second.size(); ++i)
-//        {
-//
-//
-//
-//        }
-//    }
-
-}
-
 void CFG::printTable()
 {
     bool accept = false;
@@ -651,10 +598,8 @@ void CFG::addNewProductions(set<string> &newVar, vector<production> &newPro)
 void CFG::firstAndFollow()
 {
 
-    //TODO: nog uitleg zetten in de first function
     for (const auto &var : gVariables) first(var);
 
-    //TODO: nog uitleg zetten in de follow function
     for (const auto &var : gVariables) follow(var);
 
     string firstS;
@@ -702,44 +647,43 @@ void CFG::firstAndFollow()
 
 set<string> CFG::first(const string &var)
 {
-    // TODO: nesting nog te goei maken zodat het niet te diep genest is.
     for (const auto &pro : gProductions)
     {
         if (pro.first == var && pro.second[0] != "")
         {
             // Het is een variable
-            if (isVariable(pro.second[0]))
-            {
-                bool containsEps = true;
-                int i = 0;
-                while (containsEps)
-                {
-                    set<string> setLeft = first(pro.second[i]);
-                    containsEps = containsEpsilon(setLeft);
-                    for (const auto & setVal : setLeft)
-                    {
-                        if (!containsEps) gFirst[var].insert(setVal);
-                        else if (i == pro.second.size()-1) gFirst[var].insert(setVal);
-                        else if (setVal != "") gFirst[var].insert(setVal);
-                    }
-
-                    if (containsEps) i++;
-                    if (i == pro.second.size()) containsEps = false;
-                }
-            }
+            if (isVariable(pro.second[0])) searchNextFirst(var, pro);
 
             // Het is een terminal
             else if (isTerminal(pro.second[0])) gFirst[var].insert(pro.second[0]);
         }
 
         // epsilon
-        else if (pro.first == var && pro.second[0] == "")
-        {
-            gFirst[var].insert("");
-        }
+        else if (pro.first == var && pro.second[0] == "") gFirst[var].insert("");
+
     }
 
     return gFirst[var];
+}
+
+void CFG::searchNextFirst(const string &var, const production &pro)
+{
+    bool containsEps = true;
+    int i = 0;
+    while (containsEps)
+    {
+        set<string> setLeft = first(pro.second[i]);
+        containsEps = containsEpsilon(setLeft);
+        for (const auto & setVal : setLeft)
+        {
+            if (!containsEps) gFirst[var].insert(setVal);
+            else if (i == pro.second.size()-1) gFirst[var].insert(setVal);
+            else if (setVal != "") gFirst[var].insert(setVal);
+        }
+
+        if (containsEps) i++;
+        if (i == pro.second.size()) containsEps = false;
+    }
 }
 
 bool CFG::isVariable(const string &input)
@@ -834,7 +778,6 @@ void CFG::addFollow_rule_2(const production &pro, const string &var)
 
 void CFG::addFollow_rule_3(const production &pro, const string &var, const int i, set<string> next)
 {
-    //TODO: nestings diepte inorde krijgen.
     for (int j = i+1; j < pro.second.size() ; ++j)
     {
         for (const auto & setVal : next)
@@ -1032,4 +975,3 @@ void CFG::printParserTable(const vector<vector<string>> &parserTable, vector<int
     cout << table;
 
 }
-

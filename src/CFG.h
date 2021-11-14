@@ -33,7 +33,6 @@ class CFG {
     map<string, set<string>> gFirst;
     map<string, set<string>> gFollow;
 
-
     /**
      * Zoekt alles productions van het start symbool
      * @param startState: string, start state van de pda
@@ -67,11 +66,20 @@ class CFG {
     void replacement_rule_3(Transition* transition, vector<string> &states);
 
     /**
-     * Verschuift telkens de states in de vector 1 naar voor en plaatst
-     * de voorste naar achter
-     * @param states: vector<string>, vector van states
+     * Geeft elke mogelijke combinatie terug die gemaakt wordt aan de hand van de states
+     * en de hoeveelheid replacements.
+     * @param states: vector<string>, de states waarvan we de combinaties bepalen
+     * @param numberRepl: int, het aantal replacements die gedaan moeten worden
+     * @return set<vector<string>>, de mogelijke combinaties
      */
-    void shiftStates(vector<string> &states);
+    vector<vector<string>> possibleCombinations(vector<string> &states, int numberRepl);
+
+    /**
+     * Maakt elke combinatie die mogelijk is om de huidige iteratie waarde.
+     * @param tempCombs: vector<vector<string>>, bevat huidige combinaties, maar wordt uitgebreid
+     * @param states: vector<string>, de states waar de combinaties van gemaakt moet worden
+     */
+    void createCurrCombinations(vector<vector<string>> &tempCombs, const vector<string> &states);
 
     /**
      * Stelt een lege tabel op basis van de string lengte.
@@ -119,21 +127,6 @@ class CFG {
     void compareCreationWithProductions(vector<string> const creation, pair<int, int> topPlace);
 
     /**
-     * Verwijderd alle productions naar epsilon
-     */
-    void RemoveNullProductions();
-
-    /**
-     * Wijzigt de productions waar de nullable in stond
-     */
-    void addProductions(string const nullable);
-
-    /**
-     *  Maakt elke mogelijke productie recursief aan
-     */
-    void recProduction();
-
-    /**
      * Reset all global variables die hergebruikt moeten worden bij het
      * controlleren van een nieuwe input
      */
@@ -169,6 +162,13 @@ class CFG {
      * @return: set<string>, wordt gebruikt voor recursie
      */
     set<string> first(const string &var);
+
+    /**
+     * Wanneer we een variable tegenkomen bij de first functie moeten hiervan eerst zelf de first zoeken
+     * @param var: string, de variable waarvan we de set willen bepalen
+     * @param pro: production, de huidge production waarvan we momenteel in bezig zijn
+     */
+    void searchNextFirst(const string &var, const production &pro);
 
     /**
      * Zegt als de gegeven input een variable is
@@ -222,10 +222,27 @@ class CFG {
     */
     void addFollow_rule_3(const production &pro, const string &var, const int i, set<string> next);
 
+    /**
+     * Maakt de volledige parse table maar wordt nog niet geprint
+     * @param parserTable: vector<vector<string>>, hier wordt de parsetable in opgeslagen.
+     * @param longestString: vector<int>, houdt bij wat de langste string is per kolom zodat we later de coloms beter kunne afdrukken
+     */
     void createParserTable(vector<vector<string>> &parserTable, vector<int> &longestString);
 
+    /**
+     * Zoekt naar de rij en colom van een production die in de parse table geplaatst moet worden
+     * @param variable: string, die gezocht wordt in de rij
+     * @param terminal: string, die gezocht wordt in de kolom
+     * @param parseTable: vector<vector<string>>, de tabel waarin gezocht moet worden
+     * @return pair<int, int>: de rij en de kolom
+     */
     pair<int, int> searchRowandColom(const string &variable, const string &terminal, const vector<vector<string>> & parseTable);
 
+    /**
+     * Geeft de parse table weer.
+     * @param parserTable: vector<vector<string>>, de parse table die afgedrukt moet worden
+     * @param longestString: vector<int>, de langste string per kolom
+     */
     void printParserTable(const vector<vector<string>> &parserTable, vector<int> &longestString);
 
 public:
@@ -240,11 +257,6 @@ public:
      * @return bool: zegt of de string aanvaardt wordt of niet.
      */
     bool accepts(const string input);
-
-    /**
-     * Zet een CFG om naar een CNF
-     */
-    void toCNF();
 
     /**
      * LL(1) Parser
